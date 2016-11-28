@@ -33,7 +33,7 @@ void musicSystem::setStroke(float _strockSize){
 //--------------------------------------------------------------
 //here is the flash circle
 void musicSystem::drawCircle(int id){
-        cout << "user come.." << endl;
+       
         valFFT = ofSoundGetSpectrum(nBandsToGet);
         float temp;
         

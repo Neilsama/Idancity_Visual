@@ -4,7 +4,8 @@
 #include "musicSystem.hpp"
 #include "ParticleSystem.hpp"
 #include "Particle.hpp"
-
+#include "ofxOpenCv.h"
+#include "ofxKinect.h"
 
 class ofApp : public ofBaseApp{
 
@@ -25,20 +26,47 @@ class ofApp : public ofBaseApp{
 		void dragEvent(ofDragInfo dragInfo);
 		void gotMessage(ofMessage msg);
     
-    //-------music system-------
-    ofSoundPlayer mPlayer;
-    musicSystem musicSystem;
-    ofSoundPlayer music;
     
-    ofVec3f systemOffset;
+    
+   //-------music system-------
+        ofSoundPlayer mPlayer;
+        musicSystem musicSystem;
+        int nMusic;
+        int radius;
+    
+        ofVec3f systemOffset;
     
     //-------point particle effect-------
-    vector<ParticleSystem>  mSystem;
-    ofPolyline line;
+        vector<ParticleSystem>  mSystem;
+        int nPoints;
+        ofPolyline line1;
     
-    ofVec3f mGravity;
+        ofVec3f mGravity;
     
-    void trackPoint(ofVec3f pointPos);
-    //-----scene-----
-    ofEasyCam cam;
+        void cleanSystem();
+        void trackPoint(ofVec3f pointPos);
+    
+    //-----3d scene-----
+        ofEasyCam cam;
+        ofEasyCam camGraphic;
+    
+    //-----kinect -------
+        ofxKinect kinect;
+        ofVec3f kinectOffset;
+        float kinectRatio = 0.75;
+        ofxCvColorImage colorImg;
+        ofxCvGrayscaleImage grayImg,grayBg,grayDiff;
+        ofxCvGrayscaleImage temp;
+    
+        bool bLearnBackground;
+        float brightness;
+        int threshold;
+    
+        int moveArea_width, moveArea_height;
+    
+        ofxCvContourFinder contourFinder;
+        vector<ofVec3f> brightestPoint;
+    
+    
+    
 };
