@@ -32,18 +32,16 @@ class ofApp : public ofBaseApp{
         ofSoundPlayer mPlayer;
         musicSystem musicSystem;
         int nMusic;
-        int radius;
+        int radius; //the radius of blue circle
     
-        ofVec3f systemOffset;
+        ofVec3f systemOffset; // the circle is not be draw 
     
     //-------point particle effect-------
         vector<ParticleSystem>  mSystem;
         int nPoints;
-        ofPolyline line1;
     
         ofVec3f mGravity;
     
-        void cleanSystem();
         void trackPoint(ofVec3f pointPos);
     
     //-----3d scene-----
@@ -66,7 +64,14 @@ class ofApp : public ofBaseApp{
     
         ofxCvContourFinder contourFinder;
         vector<ofVec3f> brightestPoint;
+            
+    //------movement lines-----------
     
+        ofPolyline line1;
+        ofMesh mesh;
+        
+    
+        bool bDrawMesh;
     
     
 };

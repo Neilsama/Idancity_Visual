@@ -8,7 +8,7 @@
 
 #include "ParticleSystem.hpp"
 
-ParticleSystem:: ParticleSystem(ofVec3f position): mPosition(position), mEmitRate(5), mIsAddingParticles(true){
+ParticleSystem:: ParticleSystem(ofVec3f position): mPosition(position), mEmitRate(2.5), mIsAddingParticles(true){
 
 }
 //--------------------------------------------------------
