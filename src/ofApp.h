@@ -6,6 +6,7 @@
 #include "Particle.hpp"
 #include "ofxOpenCv.h"
 #include "ofxKinect.h"
+#include "UserFlowInfo.hpp"
 
 class ofApp : public ofBaseApp{
 
@@ -29,6 +30,10 @@ class ofApp : public ofBaseApp{
     
     
    //-------music system-------
+        float * valFFT;
+        int nBandsToGet;
+        float avgFFT;
+
         ofSoundPlayer mPlayer;
         musicSystem musicSystem;
         int nMusic;
@@ -38,7 +43,7 @@ class ofApp : public ofBaseApp{
     
     //-------point particle effect-------
         vector<ParticleSystem>  mSystem;
-        int nPoints;
+        int nMaxPoints; //the number of joint points
     
         ofVec3f mGravity;
     
@@ -63,15 +68,20 @@ class ofApp : public ofBaseApp{
         int moveArea_width, moveArea_height;
     
         ofxCvContourFinder contourFinder;
-        vector<ofVec3f> brightestPoint;
-            
+        array<ofVec3f,6> brightestPoint;
+        bool bHasPoint;
+    
     //------movement lines-----------
     
-        ofPolyline line1;
+        ofPolyline line;
         ofMesh mesh;
-        
     
         bool bDrawMesh;
+        bool bFinished;
+        bool bBegin;
+    
+    //-------userflow info-----
+        UserFlowInfo info;
     
     
 };

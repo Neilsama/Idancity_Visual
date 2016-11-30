@@ -16,13 +16,14 @@
 class ParticleSystem{
 
 public:
-    ParticleSystem(ofVec3f position);
-    void update(ofVec3f force);
+    ParticleSystem(ofVec3f position, float fft);
+    void update(ofVec3f force,float fft);
     void draw();
     
     vector<Particle>    mParticleList;
     ofVec3f             mPosition;
     int                 mEmitRate;
+    float               mfft;
     bool                mIsAddingParticles;
 };
 

@@ -8,12 +8,13 @@
 
 #include "ParticleSystem.hpp"
 
-ParticleSystem:: ParticleSystem(ofVec3f position): mPosition(position), mEmitRate(2.5), mIsAddingParticles(true){
+ParticleSystem:: ParticleSystem(ofVec3f position, float fft): mPosition(position), mIsAddingParticles(true),mfft(fft){
 
 }
 //--------------------------------------------------------
-void ParticleSystem::update(ofVec3f force){
-    
+void ParticleSystem::update(ofVec3f force, float fft){
+    mfft = fft;
+    mEmitRate = ofMap(mfft, 0, 1, 0, 3);
     if (mIsAddingParticles){
         //pushing particles into the array
         for(int i = 0; i < mEmitRate ; i++){

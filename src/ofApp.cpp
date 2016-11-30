@@ -7,12 +7,11 @@ void ofApp::setup(){
     moveArea_height  = 350;  //circle radius
     moveArea_width = 350;   //kinectRatio;
     
-   // ofSetOrientation(OF_ORIENTATION_DEFAULT,false); // adjust openGL coordinate
-    
     //-----------------setup music-----------------
     
         systemOffset = ofVec3f(ofGetWidth()/2, ofGetHeight()/2 + 10.0, 0.0); // system offset relative to center point of window
         nMusic = 9;
+        nBandsToGet = 128;
     
         //------------load music randomly------------
     
@@ -30,7 +29,7 @@ void ofApp::setup(){
         kinect.init(false,true,false);
         kinect.open();
         kinect.setDepthClipping(500,3000);
-        kinect.setCameraTiltAngle(-5);
+        kinect.setCameraTiltAngle(0);
         colorImg.allocate(kinect.width, kinect.height);
         grayImg.allocate(kinect.width, kinect.height);
         grayBg.allocate(kinect.width, kinect.height);
@@ -38,8 +37,11 @@ void ofApp::setup(){
     
         bLearnBackground = true;
         threshold = 50;
-
+    
+        nMaxPoints = 6;
+    
         kinectOffset = ofVec3f(-kinect.width/2, -kinect.height/2, 0);
+
     
     //--------------setup Mesh----------------
     
@@ -48,20 +50,39 @@ void ofApp::setup(){
         glEnable(GL_POINT_SMOOTH);
         glPointSize(2);
         bDrawMesh = false;
+        bHasPoint = false;
+        bBegin = false;
     
+        info.init();
 }
 
 //--------------------------------------------------------------
 void ofApp::update(){
     
-    //-------particle system------------
+    //--------music fft update if sounds play------------
+    
+    if(mPlayer.isPlaying()){
+        valFFT = ofSoundGetSpectrum(nBandsToGet);
+        float temp;
+    
+        for(int i = 0; i < nBandsToGet; i++){
+            temp += valFFT[i];
+        }
+        avgFFT = temp/nBandsToGet*10;
+        //cout << "fft is: " << avgFFT << endl;
+    
+    
+        //-------particle system------------
     
         for (int i = 0; i < mSystem.size(); i++){
-            mSystem[i].update(mGravity); //apply gravity all particles
+            mSystem[i].update(mGravity, avgFFT); //apply gravity all particles
         }
+    }
     
-    //--------update kinect----------
     
+    //--------update kinect if begin----------
+    
+    if(bBegin){
         kinect.update();
     
         if(kinect.isFrameNew()){
@@ -76,30 +97,37 @@ void ofApp::update(){
             grayDiff.threshold(threshold);
         }
  
-        contourFinder.findContours(grayDiff, 0, kinect.width*kinect.height, 4, true);
-        cout <<contourFinder.nBlobs <<endl;
+        contourFinder.findContours(grayDiff, 0, kinect.width*kinect.height, nMaxPoints, true);
     
-        //---------calculate blobs center position, push that point
     
-        for(int i = 0; i < contourFinder.nBlobs; i++){
-            ofVec2f tempVec2f = contourFinder.blobs[i].boundingRect.getCenter();
-            float tempZ = kinect.getDistanceAt(tempVec2f); //get depth value of specific point
-            tempVec2f.y = 480-tempVec2f.y;
+    //---------calculate blobs center position, push that point
+    
+        if(contourFinder.nBlobs != 0){
+            bHasPoint = true;
+            for(int i = 0; i < contourFinder.nBlobs; i++){
+                ofVec2f tempVec2f = contourFinder.blobs[i].boundingRect.getCenter();
+                float tempZ = kinect.getDistanceAt(tempVec2f); //get depth value of specific point
+                cout << tempZ << endl;
+                tempVec2f.y = 480-tempVec2f.y;
         
+                float z;
+                if(tempZ>1000 && tempZ<3000)
+                    z = ofMap(tempZ, 1000, 3000, -200,0);
+                if(tempZ >4000 && z <8000)
+                    z = ofMap(tempZ, 4000, 8000, 0,200);
+
             
-            float z;
-            if(tempZ>1000 && tempZ<3000)
-                z = ofMap(tempZ, 1000, 3000, -200,0);
-            if(tempZ >5000 && z <9000)
-                z = ofMap(tempZ, 5000, 9000, 0,200);
-
-            if(brightestPoint.size()<contourFinder.nBlobs)
-                brightestPoint.push_back(ofVec3f(tempVec2f.x,tempVec2f.y,z)+kinectOffset);
-            else
-                brightestPoint.clear();
-
+            if(contourFinder.nBlobs != 0)
+                brightestPoint[i] = ofVec3f(tempVec2f.x,tempVec2f.y,z)+kinectOffset;
+            
+            }
         }
-
+        if(contourFinder.nBlobs == 0){
+            bHasPoint = false;
+            for(int i = 0; i<4;i++)
+                brightestPoint[i] = ofVec3f(0);
+        }
+    }
 }
 
 //--------------------------------------------------------------
@@ -111,33 +139,47 @@ void ofApp::draw(){
         ofBackgroundGradient(ofColor(50), ofColor(0));
         ofSetColor(255);
 
-        ofDrawBitmapString("find "+ofToString(contourFinder.nBlobs)+" blobs", 30, 40);
+        //ofDrawBitmapString("find "+ofToString(contourFinder.nBlobs)+" blobs", 30, 40);
     
         //--------information about blobs---------
-        for (int i = 0; i < brightestPoint.size(); i++) {
-                    ofDrawBitmapString("brightnestPoin["+ofToString(i)+"]: "+ofToString(brightestPoint[i].x)+", "+ofToString(brightestPoint[i].y)+", "+ofToString(brightestPoint[i].z)+"), distance is: "+ofToString(kinect.getDistanceAt(brightestPoint[i].x,brightestPoint[i].y))+" [point.z]: "+ofToString(brightestPoint[i].z),30, 100+i*15);
-                }
+//        for (int i = 0; i < brightestPoint.size(); i++) {
+//                    ofDrawBitmapString("brightnestPoin["+ofToString(i)+"]: "+ofToString(brightestPoint[i].x)+", "+ofToString(brightestPoint[i].y)+", "+ofToString(brightestPoint[i].z)+"), distance is: "+ofToString(kinect.getDistanceAt(brightestPoint[i].x,brightestPoint[i].y))+" [point.z]: "+ofToString(brightestPoint[i].z),30, 100+i*15);
+//                }
     
+        //---------information about UI-----------
+        if(!mPlayer.isPlaying() && !bBegin){
+            info.showInfo("WELCOME!!!!", 760, 300);
+           info.showInfo("PLEASE SAY",770,400);
+            info.showInfo("'I LOVE NEIL'",750,500);
+            info.showInfo("TO BEGIN",780,600);
+        }
+        if(bFinished){
+            cout << "draw info - bFinished is: " << bFinished <<endl;
+            info.showInfo("THANKS BABY~", 700, 200);
+        }
     
     //--------draw kinect image for test-----
-        contourFinder.draw();
+       // contourFinder.draw();
     
     
     
     //the following part are translate the coordinations with systemOffset
+    //*******************************************************************
     //-----------translate coordination---------------------
+    
         ofPushMatrix();
         ofTranslate(systemOffset);
       
         //------tracking point and light cooresponding arc of the circle in 3d space---------------------
 
-        if(brightestPoint.size()>0){
-            for(int i = 0; i<brightestPoint.size();i++){
+        if(bHasPoint && mPlayer.isPlaying()){
+            for(int i = 0; i < contourFinder.nBlobs;i++){
                 trackPoint(brightestPoint[i]);
             }
         }
     
         camGraphic.begin();
+    
         //-----draw mouse particle system in 2d ------------------
     
         for (int i = 0; i < mSystem.size(); i++){
@@ -149,23 +191,20 @@ void ofApp::draw(){
 
         //------draw line---------------------
     
-        nPoints = brightestPoint.size();
-    
-    
-            if(nPoints == 1){
-            line1.begin();
-            line1.addVertex(brightestPoint[0]);
-//            ofDrawBitmapString("brightnestPoin[0]: "+ofToString(brightestPoint[0].x)+", "+ofToString(brightestPoint[0].y)+", "+ofToString(brightestPoint[0].z),brightestPoint[0].x, brightestPoint[0].y);
-        }
+        line.begin();
+        if(brightestPoint[0] != ofVec3f(0))
+            line.addVertex(brightestPoint[0]);
 
-        if(!bDrawMesh)
-            line1.draw();
+        if(!bDrawMesh && bBegin)
+            cout << "draw line - bDrawMesh is: "<<bDrawMesh <<endl;
+            cout << "draw line - bBegin is: " << bBegin <<endl;
+            ofSetColor(200);
+            line.draw();
     
         if(bDrawMesh){
-            
             mesh.drawWireframe();
             mesh.drawVertices();
-            ofSetColor(200, 200, 200, 70);
+            ofSetColor(200, 200, 200, 50);
             mesh.drawFaces();
         }
     
@@ -188,57 +227,57 @@ void ofApp::draw(){
 
 //--------------------------------------------------------------
 void ofApp::trackPoint(ofVec3f pointPos){
-      ofFill();
-    if(mPlayer.isPlaying()){
-//              ofDrawBitmapString("track point: "+ofToString(pointPos.x)+", "+ofToString(pointPos.y)+", "+ofToString(pointPos.z),pointPos.x, pointPos.y);
     
+        ofFill();
+    
+        if(mPlayer.isPlaying()){
         
-        //create a new particle system after click
-            ParticleSystem system = ParticleSystem(ofVec3f (pointPos.x, pointPos.y, pointPos.z));
-            mSystem.push_back(system);
+    //create a new particle system---------------------------
+            
+        ParticleSystem system = ParticleSystem(ofVec3f (pointPos.x, pointPos.y, pointPos.z),avgFFT);
+        mSystem.push_back(system);
 
-        
-        
-    //check mouse position to trigger flash strock-------------
+    //check points position to trigger flash strock-------------
+            
         if(pointPos.x > 0){
             if(pointPos.y <= 0 && pointPos.y > -120){
-                musicSystem.drawCircle(0);
+                musicSystem.drawCircle(0, avgFFT);
             }
             if(pointPos.y < -120 && pointPos.y > -180){
-                musicSystem.drawCircle(1);
+                musicSystem.drawCircle(1, avgFFT);
             }
             if(pointPos.y <= -180 && pointPos.y >= -240){
-                musicSystem.drawCircle(2);
+                musicSystem.drawCircle(2,avgFFT);
             }
             if(pointPos.y <= 120 && pointPos.y > 0){
-                musicSystem.drawCircle(11);
+                musicSystem.drawCircle(11, avgFFT);
             }
             if(pointPos.y <= 180 && pointPos.y > 120){
-                musicSystem.drawCircle(10);
+                musicSystem.drawCircle(10, avgFFT);
             }
             if(pointPos.y <= 240 && pointPos.y > 180){
-                musicSystem.drawCircle(9);
+                musicSystem.drawCircle(9, avgFFT);
             }
-
         }
+            
         if(pointPos.x < 0){
             if(pointPos.y <= 0 && pointPos.y > -120){
-                musicSystem.drawCircle(5);
+                musicSystem.drawCircle(5,avgFFT);
             }
             if(pointPos.y < -120 && pointPos.y > -180){
-                musicSystem.drawCircle(4);
+                musicSystem.drawCircle(4, avgFFT);
             }
             if(pointPos.y <= -180 && pointPos.y >= -240){
-                musicSystem.drawCircle(3);
+                musicSystem.drawCircle(3, avgFFT);
             }
             if(pointPos.y <= 120 && pointPos.y > 0){
-                musicSystem.drawCircle(6);
+                musicSystem.drawCircle(6,  avgFFT);
             }
             if(pointPos.y <= 180 && pointPos.y > 120){
-                musicSystem.drawCircle(7);
+                musicSystem.drawCircle(7, avgFFT);
             }
             if(pointPos.y <= 240 && pointPos.y > 180){
-                musicSystem.drawCircle(8);
+                musicSystem.drawCircle(8, avgFFT);
             }
         }
     }
@@ -250,25 +289,42 @@ void ofApp::trackPoint(ofVec3f pointPos){
 void ofApp::keyPressed(int key){
 
     switch (key) {
-        case OF_KEY_RETURN:
-            mPlayer.play();
+        case OF_KEY_RETURN:{
+            if(!mPlayer.isPlaying()){
+                mPlayer.play();
+                bBegin = true;
+                bFinished = false;
+                cout << "KeyPressed - bFinished is:  " << bFinished <<endl;
+            }
+            else{
+                mPlayer.stop();
+                bBegin = false;
+                bFinished = true;
+            }
             break;
+        }
+            
         case OF_KEY_UP:{
             int i = int(ofRandom(nMusic));
             mPlayer.load("music_"+ofToString(i)+".mp3");
+            line.clear();
+            mesh.clear();
             mPlayer.play();
+            break;
         }
         case 's':{
-            mesh.addVertices(line1.getVertices());
+            mesh.addVertices(line.getVertices());
             mesh.save("userMovement");
             mesh.save("userMovement.ply");
-            line1.clear();
+            line.clear();
             bDrawMesh = true;
-        
+            bFinished = true;
+            break;
         }
             
         
     }
+    
 }
 
 //--------------------------------------------------------------

@@ -24,15 +24,15 @@ class musicSystem{
     float strockSize; //the whole circle stroke
     
     //-----------sound parameters--------
-    float * valFFT;
-    int nBandsToGet;
+    //float * valFFT;
+    //int nBandsToGet;
     float avgFFT;
-    ofSoundPlayer music;
+    //ofSoundPlayer music;
     
     void initialize(ofVec3f _center, float _radius,ofSoundPlayer _music);
     void setStroke(float _strockSize);
 
-    void drawCircle(int id);
+    void drawCircle(int id, float fft);
     void drawSpace();
     void drawAmbience();
     
