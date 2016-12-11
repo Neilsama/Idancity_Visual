@@ -1,2 +1,4 @@
+ofxDxfExport
 ofxKinect
 ofxOpenCv
+ofxSTL

@@ -7,6 +7,7 @@
 #include "ofxOpenCv.h"
 #include "ofxKinect.h"
 #include "UserFlowInfo.hpp"
+#include "ofxDxfExport.h"
 
 class ofApp : public ofBaseApp{
 
@@ -69,6 +70,8 @@ class ofApp : public ofBaseApp{
     
         ofxCvContourFinder contourFinder;
         array<ofVec3f,6> brightestPoint;
+        ofImage savingImg;
+    
         bool bHasPoint;
     
     //------movement lines-----------
@@ -82,6 +85,9 @@ class ofApp : public ofBaseApp{
     
     //-------userflow info-----
         UserFlowInfo info;
+    
+        ofxDxfExport dxf;
+        vector <ofVec3f> pts;
     
     
 };

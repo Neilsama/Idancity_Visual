@@ -18,7 +18,7 @@ void ofApp::setup(){
         int i = int(ofRandom(nMusic));
         mPlayer.load("music_"+ofToString(i)+".mp3");
         musicSystem.initialize(ofVec3f(0,0,0), moveArea_height, mPlayer);
-        musicSystem.setStroke(5);
+        musicSystem.setStroke(15);
     
         mGravity = ofVec3f(0.f, 0.02f, 0.02f); // set particle system gravity
     
@@ -69,8 +69,7 @@ void ofApp::update(){
             temp += valFFT[i];
         }
         avgFFT = temp/nBandsToGet*10;
-        //cout << "fft is: " << avgFFT << endl;
-    
+        
     
         //-------particle system------------
     
@@ -148,6 +147,7 @@ void ofApp::draw(){
     
         //---------information about UI-----------
         if(!mPlayer.isPlaying() && !bBegin){
+            cout << "bug point bdrawmesh: " << bDrawMesh <<endl;
             info.showInfo("WELCOME!!!!", 760, 300);
            info.showInfo("PLEASE SAY",770,400);
             info.showInfo("'I LOVE NEIL'",750,500);
@@ -159,12 +159,18 @@ void ofApp::draw(){
         }
     
     //--------draw kinect image for test-----
-       // contourFinder.draw();
+        contourFinder.draw();
     
     
     
     //the following part are translate the coordinations with systemOffset
     //*******************************************************************
+    //--------------draw the ground plane------------
+        cam.begin();
+        cam.disableMouseInput();
+        musicSystem.drawSpace();
+        cam.end();
+    
     //-----------translate coordination---------------------
     
         ofPushMatrix();
@@ -192,13 +198,16 @@ void ofApp::draw(){
         //------draw line---------------------
     
         line.begin();
-        if(brightestPoint[0] != ofVec3f(0))
+        if(brightestPoint[0] != ofVec3f(0)){
             line.addVertex(brightestPoint[0]);
+            //pts.push_back(brightestPoint[0]);
+        }
 
         if(!bDrawMesh && bBegin)
             cout << "draw line - bDrawMesh is: "<<bDrawMesh <<endl;
             cout << "draw line - bBegin is: " << bBegin <<endl;
-            ofSetColor(200);
+            // ofSetColor(ofRandom(255), ofRandom(255), ofRandom(255));
+    
             line.draw();
     
         if(bDrawMesh){
@@ -214,12 +223,6 @@ void ofApp::draw(){
     
     ofPopMatrix();
     
-    
-    //--------------draw the ground plane------------
-    cam.begin();
-    cam.disableMouseInput();
-    musicSystem.drawSpace();
-    cam.end();
 
     
 }
@@ -290,6 +293,8 @@ void ofApp::keyPressed(int key){
 
     switch (key) {
         case OF_KEY_RETURN:{
+            bDrawMesh = false;
+            cout << "press return: bdrawmesh:" << bDrawMesh <<endl;
             if(!mPlayer.isPlaying()){
                 mPlayer.play();
                 bBegin = true;
@@ -314,11 +319,14 @@ void ofApp::keyPressed(int key){
         }
         case 's':{
             mesh.addVertices(line.getVertices());
-            mesh.save("userMovement");
-            mesh.save("userMovement.ply");
             line.clear();
             bDrawMesh = true;
             bFinished = true;
+            break;
+        }
+        case'e':{
+            savingImg.grabScreen(0, 0, ofGetWidth(), ofGetHeight());
+            savingImg.save("screenshot.png");
             break;
         }
             
