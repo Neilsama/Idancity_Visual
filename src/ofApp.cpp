@@ -52,6 +52,9 @@ void ofApp::setup(){
         bDrawMesh = false;
         bHasPoint = false;
         bBegin = false;
+        bAddpoint = false;
+        bRotate = false;
+        degree = 0;
     
         info.init();
 }
@@ -78,6 +81,7 @@ void ofApp::update(){
         }
     }
     
+    musicSystem.updateCircleStrock( avgFFT);
     
     //--------update kinect if begin----------
     
@@ -115,17 +119,32 @@ void ofApp::update(){
                 if(tempZ >4000 && z <8000)
                     z = ofMap(tempZ, 4000, 8000, 0,200);
 
-            
-            if(contourFinder.nBlobs != 0)
                 brightestPoint[i] = ofVec3f(tempVec2f.x,tempVec2f.y,z)+kinectOffset;
             
             }
+            
+            if(brightestPoint[0] != ofVec3f(0)){
+                line.addVertex(brightestPoint[0]);
+                pts.push_back(brightestPoint[0]);
+                line.begin();
+            }
+            
         }
         if(contourFinder.nBlobs == 0){
             bHasPoint = false;
             for(int i = 0; i<4;i++)
                 brightestPoint[i] = ofVec3f(0);
         }
+    }
+    
+    if(bAddpoint){
+        if(it != pts.end()){
+            mesh.addVertex(*it);
+            it++;
+        }
+    }
+    if(bRotate){
+        degree += 1;
     }
 }
 
@@ -138,13 +157,6 @@ void ofApp::draw(){
         ofBackgroundGradient(ofColor(50), ofColor(0));
         ofSetColor(255);
 
-        //ofDrawBitmapString("find "+ofToString(contourFinder.nBlobs)+" blobs", 30, 40);
-    
-        //--------information about blobs---------
-//        for (int i = 0; i < brightestPoint.size(); i++) {
-//                    ofDrawBitmapString("brightnestPoin["+ofToString(i)+"]: "+ofToString(brightestPoint[i].x)+", "+ofToString(brightestPoint[i].y)+", "+ofToString(brightestPoint[i].z)+"), distance is: "+ofToString(kinect.getDistanceAt(brightestPoint[i].x,brightestPoint[i].y))+" [point.z]: "+ofToString(brightestPoint[i].z),30, 100+i*15);
-//                }
-    
         //---------information about UI-----------
         if(!mPlayer.isPlaying() && !bBegin){
             cout << "bug point bdrawmesh: " << bDrawMesh <<endl;
@@ -159,7 +171,7 @@ void ofApp::draw(){
         }
     
     //--------draw kinect image for test-----
-        contourFinder.draw();
+       // contourFinder.draw();
     
     
     
@@ -178,7 +190,7 @@ void ofApp::draw(){
       
         //------tracking point and light cooresponding arc of the circle in 3d space---------------------
 
-        if(bHasPoint && mPlayer.isPlaying()){
+        if(bHasPoint && mPlayer.isPlaying() && !bDrawMesh){
             for(int i = 0; i < contourFinder.nBlobs;i++){
                 trackPoint(brightestPoint[i]);
             }
@@ -188,25 +200,20 @@ void ofApp::draw(){
     
         //-----draw mouse particle system in 2d ------------------
     
-        for (int i = 0; i < mSystem.size(); i++){
-            mSystem[i].draw();
+        if(bBegin){
+            for (int i = 0; i < mSystem.size(); i++){
+                mSystem[i].draw();
+            }
         }
+    
         ofSetColor(200, 200, 200);
     
-    
-
         //------draw line---------------------
     
-        line.begin();
-        if(brightestPoint[0] != ofVec3f(0)){
-            line.addVertex(brightestPoint[0]);
-            //pts.push_back(brightestPoint[0]);
-        }
-
+        if(bRotate)
+            ofRotateY(degree);
+    
         if(!bDrawMesh && bBegin)
-            cout << "draw line - bDrawMesh is: "<<bDrawMesh <<endl;
-            cout << "draw line - bBegin is: " << bBegin <<endl;
-            // ofSetColor(ofRandom(255), ofRandom(255), ofRandom(255));
     
             line.draw();
     
@@ -244,43 +251,43 @@ void ofApp::trackPoint(ofVec3f pointPos){
             
         if(pointPos.x > 0){
             if(pointPos.y <= 0 && pointPos.y > -120){
-                musicSystem.drawCircle(0, avgFFT);
+                musicSystem.drawCircle(0);
             }
             if(pointPos.y < -120 && pointPos.y > -180){
-                musicSystem.drawCircle(1, avgFFT);
+                musicSystem.drawCircle(1);
             }
             if(pointPos.y <= -180 && pointPos.y >= -240){
-                musicSystem.drawCircle(2,avgFFT);
+                musicSystem.drawCircle(2);
             }
             if(pointPos.y <= 120 && pointPos.y > 0){
-                musicSystem.drawCircle(11, avgFFT);
+                musicSystem.drawCircle(11);
             }
             if(pointPos.y <= 180 && pointPos.y > 120){
-                musicSystem.drawCircle(10, avgFFT);
+                musicSystem.drawCircle(10);
             }
             if(pointPos.y <= 240 && pointPos.y > 180){
-                musicSystem.drawCircle(9, avgFFT);
+                musicSystem.drawCircle(9);
             }
         }
             
         if(pointPos.x < 0){
             if(pointPos.y <= 0 && pointPos.y > -120){
-                musicSystem.drawCircle(5,avgFFT);
+                musicSystem.drawCircle(5);
             }
             if(pointPos.y < -120 && pointPos.y > -180){
-                musicSystem.drawCircle(4, avgFFT);
+                musicSystem.drawCircle(4);
             }
             if(pointPos.y <= -180 && pointPos.y >= -240){
-                musicSystem.drawCircle(3, avgFFT);
+                musicSystem.drawCircle(3);
             }
             if(pointPos.y <= 120 && pointPos.y > 0){
-                musicSystem.drawCircle(6,  avgFFT);
+                musicSystem.drawCircle(6);
             }
             if(pointPos.y <= 180 && pointPos.y > 120){
-                musicSystem.drawCircle(7, avgFFT);
+                musicSystem.drawCircle(7);
             }
             if(pointPos.y <= 240 && pointPos.y > 180){
-                musicSystem.drawCircle(8, avgFFT);
+                musicSystem.drawCircle(8);
             }
         }
     }
@@ -322,6 +329,17 @@ void ofApp::keyPressed(int key){
             line.clear();
             bDrawMesh = true;
             bFinished = true;
+            bBegin = false;
+            break;
+        }
+        case 'p':{
+            bBegin = false;
+            bDrawMesh = true;
+            it = pts.begin();
+            line.clear();
+            mesh.clear();
+            bAddpoint = true;
+            bRotate = true;
             break;
         }
         case'e':{

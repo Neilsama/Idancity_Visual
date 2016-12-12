@@ -14,9 +14,6 @@ void musicSystem::initialize(ofVec3f _center, float _radius,ofSoundPlayer _music
     
     center = _center;
     radius = _radius;
-   // music = _music;
-
-    //nBandsToGet = 128;
     
     cout << "set up music system..." << endl;
 
@@ -31,23 +28,20 @@ void musicSystem::setStroke(float _strockSize){
 };
 
 //--------------------------------------------------------------
-//here is the flash circle
-void musicSystem::drawCircle(int id, float fft){
-       
-//        valFFT = ofSoundGetSpectrum(nBandsToGet);
-//        float temp;
-//        
-//        for(int i = 0; i < nBandsToGet; i++){
-//            temp += valFFT[i];
-//        }
+void musicSystem::updateCircleStrock(float fft){
         avgFFT = fft;
-        float stroke = strockSize * avgFFT;  // Increase for a wider brush
-        float alpha = ofMap(avgFFT, 0.5, 1.2, 180, 250);  // Increase for a more opaque brush
+        dynamicStrockSize = strockSize * avgFFT;  // Increase for a wider brush
+        alpha = ofMap(avgFFT, 0.5, 1.2, 180, 250);  // Increase for a more opaque brush
+}
+
+//--------------------------------------------------------------
+//here is the flash circle
+void musicSystem::drawCircle(int id){
         ofSetColor(0, 229, 221, alpha);
         float angle = 30*id;
         for(angle ; angle <= 30+30*id; angle++){
             ofVec3f point = ofVec3f(radius*cos(ofDegToRad(angle)),radius*sin(ofDegToRad(angle)),0);
-            ofDrawCircle(point, stroke);
+            ofDrawCircle(point, dynamicStrockSize);
         }
 }
 

@@ -37,10 +37,10 @@ class ofApp : public ofBaseApp{
 
         ofSoundPlayer mPlayer;
         musicSystem musicSystem;
-        int nMusic;
+        int nMusic; // the number of music
         int radius; //the radius of blue circle
     
-        ofVec3f systemOffset; // the circle is not be draw 
+        ofVec3f systemOffset; // the circle offset;
     
     //-------point particle effect-------
         vector<ParticleSystem>  mSystem;
@@ -56,7 +56,7 @@ class ofApp : public ofBaseApp{
     
     //-----kinect -------
         ofxKinect kinect;
-        ofVec3f kinectOffset;
+        ofVec3f kinectOffset; //kinect offset to
         float kinectRatio = 0.75;
         ofxCvColorImage colorImg;
         ofxCvGrayscaleImage grayImg,grayBg,grayDiff;
@@ -72,7 +72,7 @@ class ofApp : public ofBaseApp{
         array<ofVec3f,6> brightestPoint;
         ofImage savingImg;
     
-        bool bHasPoint;
+        bool bHasPoint; //true: find a light spot; false: no light spot
     
     //------movement lines-----------
     
@@ -81,13 +81,22 @@ class ofApp : public ofBaseApp{
     
         bool bDrawMesh;
         bool bFinished;
-        bool bBegin;
+        bool bBegin; // whole system begin, true: kinect begin tracking,music playing
+    
+        bool bAddpoint; // in play back add pts to mesh;
+        bool bRotate;
+        float degree;
+    
+        vector <ofVec3f>::iterator it;
+    
     
     //-------userflow info-----
         UserFlowInfo info;
     
         ofxDxfExport dxf;
         vector <ofVec3f> pts;
+    
+
     
     
 };
