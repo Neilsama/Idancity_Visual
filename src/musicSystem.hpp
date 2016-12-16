@@ -26,10 +26,8 @@ class musicSystem{
     float alpha;
 
     //-----------sound parameters--------
-    //float * valFFT;
-    //int nBandsToGet;
+
     float avgFFT;
-    //ofSoundPlayer music;
     
     void initialize(ofVec3f _center, float _radius,ofSoundPlayer _music);
     void setStroke(float _strockSize);
